@@ -10,6 +10,7 @@ var ErrPhoneRegistered = errors.New("phone already registered")
 var ErrAmountMustBePositive = errors.New("amount must be greater than zero")
 var ErrAccountNotFound = errors.New("account not found")
 var ErrNotEnoughBalance = errors.New("not enough balance")
+var ErrPaymentNotFound = errors.New("payment not found")
 
 type Service struct {
 	nextAccountID int64
@@ -105,5 +106,36 @@ func (s *Service)FindAccountByID(accountID int64)(*types.Account, error) {
 	}
 
 	return account, nil
+}
+
+func (s *Service)FindPaymentByID(paymentID string)(*types.Payment, error){
+	var payment *types.Payment
+	for _, pay := range s.payments {
+		if pay.ID == paymentID {
+			payment = pay
+			break
+		}
+	}
+
+	if payment == nil {
+		return nil, ErrPaymentNotFound
+	}
+
+	return payment, nil
+}
+
+func (s *Service)Reject(paymentID string) error {
+	payment, err := s.FindPaymentByID(paymentID)
+	account, _ := s.FindAccountByID(payment.AccountID)
+	if err == nil {
+		payment.Status = types.PaymentStatusFail
+		account.Balance += payment.Amount
+	}
+
+	if err != nil {
+		return ErrPaymentNotFound
+	}
+
+	return nil
 }
 
