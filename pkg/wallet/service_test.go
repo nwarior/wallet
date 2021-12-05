@@ -2,8 +2,12 @@ package wallet
 
 import (
 	"testing"
+	"github.com/nwarior/wallet/pkg/types"
+	"reflect"
+	"github.com/google/uuid"
 )
 
+/*
 func TestService_RegisterAccount_success(t *testing.T) {
 	svc := &Service{}
 	_, err := svc.RegisterAccount("+992000000001")
@@ -11,6 +15,7 @@ func TestService_RegisterAccount_success(t *testing.T) {
 		t.Errorf("invalid result, expected: nil, actual: %v", err)
 	}
 }
+*/
 
 func TestService_RegisterAccount_alreadyRegistered(t *testing.T) {
 	svc := &Service{}
@@ -22,20 +27,93 @@ func TestService_RegisterAccount_alreadyRegistered(t *testing.T) {
 	}
 }
 
-func TestService_FindAccountByID_nil(t *testing.T) {
-	svc := &Service{}
-	svc.RegisterAccount("+992000000001")
-	svc.RegisterAccount("+992000000002")
-	svc.RegisterAccount("+992000000003")
-	svc.RegisterAccount("+992000000004")
-
-	_, err := svc.FindAccountByID(1)
-
+/*
+func TestService_FindAccountByID_success(t *testing.T) {
+	// создаём сервис
+	s := newTestService()
+	account, _, err := s.addAccount(defaultTestAccount)
 	if err != nil {
-		t.Errorf("invalid result, expected: nil, actual: %v", err)
+		t.Error(err)
+		return
+	}
+	
+	got, err := s.FindAccountByID(account.ID)
+	if err != nil {
+		t.Error("FindAccountByID(): can't find account")
+		return
+	}
+
+	if !reflect.DeepEqual(account, got) {
+		t.Errorf("invalid result, expected: %v, actual: %v", account, got)
 	}
 }
 
+func TestService_FindAccountByID_fail(t *testing.T) {
+	// создаём сервис
+	s := newTestService()
+	account, _, err := s.addAccount(defaultTestAccount)
+	if err != nil {
+		t.Error(err)
+		return
+	}
+	
+	got, err := s.FindAccountByID(514152)
+	if err == nil {
+		t.Error("result must be ErrAccountNotFound")
+		return
+	}
+
+	if reflect.DeepEqual(account, got) {
+		t.Errorf("invalid result, expected: %v, actual: %v", account, got)
+	}
+}
+*/
+func TestService_FindPaymentByID_success(t *testing.T) {
+	// создаём сервис
+	s := newTestService()
+	_, payments, err := s.addAccount(defaultTestAccount)
+	if err != nil {
+		t.Error(err)
+		return
+	}
+
+	// пробуем найти платёж
+	payment := payments[0]
+	got, err := s.FindPaymentByID(payment.ID)
+	if err != nil {
+		t.Errorf("FindPaymentByID(): error = %v", err)
+		return
+	}
+
+	// сравниваем платежи
+	if !reflect.DeepEqual(payment, got) {
+		t.Errorf("FindPaymentByID(): wrong payment returned = %v", err)
+		return
+	}
+}
+
+func TestService_FindPaymentByID_fail(t *testing.T) {
+	// создаём сервис
+	s := newTestService()
+	_, _, err := s.addAccount(defaultTestAccount)
+	if err != nil {
+		t.Error(err)
+		return
+	}
+
+	// пробуем найти несуществующий платёж
+	_, err = s.FindPaymentByID(uuid.New().String())
+	if err == nil {
+		t.Error("FindPaymentByID(): must return error, returned nil")
+		return
+	}
+
+	if err != ErrPaymentNotFound {
+		t.Errorf("FindPaymentByID(): must return ErrPaymentNotFound, returned = %v", err)
+		return
+	}
+}
+/*
 func TestService_FindPaymentByID_success(t *testing.T) {
 	svc := &Service{}
 	svc.RegisterAccount("+992000000001")
@@ -64,6 +142,7 @@ func TestService_FindPaymentByID_fail(t *testing.T) {
 	}
 }
 
+
 func TestService_Reject_success(t *testing.T) {
 	svc := &Service{}
 	svc.RegisterAccount("+992000000001")
@@ -78,7 +157,7 @@ func TestService_Reject_success(t *testing.T) {
 	}
 }
 
-/*
+
 func TestService_Reject_fail(t *testing.T) {
 	svc := &Service{}
 	svc.RegisterAccount("+992000000001")
@@ -91,3 +170,105 @@ func TestService_Reject_fail(t *testing.T) {
 	}
 }
 */
+
+func TestService_Reject_success(t *testing.T) {
+	// создаём сервис
+	s := newTestService()
+	_, payments, err := s.addAccount(defaultTestAccount)
+	if err != nil {
+		t.Error(err)
+		return
+	}
+	
+	// пробуем отменить платёж
+	payment := payments[0]
+	err = s.Reject(payment.ID)
+	if err != nil {
+		t.Errorf("Reject(): error = %v", err)
+		return
+	}
+
+	savedPayment, err := s.FindPaymentByID(payment.ID)
+	if err != nil {
+		t.Errorf("Reject(): can't find payment by id, error = %v", err)
+		return
+	}
+	if savedPayment.Status != types.PaymentStatusFail {
+		t.Errorf("Reject(): status didn't changed, payment = %v,", savedPayment)
+		return
+	}
+
+	savedAccount, err := s.FindAccountByID(payment.AccountID)
+	if err != nil {
+		t.Errorf("Reject(): can't find account by id, error = %v", err)
+		return
+	}
+	if savedAccount.Balance != defaultTestAccount.balance {
+		t.Errorf("Reject(): balance didn't changed, account = %v", savedAccount)
+		return
+	}
+}
+
+/*
+func TestService_Reject_fail(t *testing.T) {
+	// создаём сервис
+	s := newTestService()
+	_, payments, err := s.addAccount(defaultTestAccount)
+	if err != nil {
+		t.Error(err)
+		return
+	}
+	
+	// пробуем отменить платёж
+	payment := payments[0]
+	err = s.Reject(uuid.New().String())
+	if err == nil {
+		t.Error("Reject(): must be error")
+		return
+	}
+
+	savedPayment, err1 := s.FindPaymentByID(payment.ID)
+	if err1 != nil {
+		t.Errorf("Reject(): can't find payment by id, error = %v", err)
+		return
+	}
+	if savedPayment.Status == types.PaymentStatusFail {
+		t.Errorf("Reject(): status didn't changed, payment = %v,", savedPayment)
+		return
+	}
+
+	savedAccount, err2 := s.FindAccountByID(payment.AccountID)
+	if err2 != nil {
+		t.Errorf("Reject(): can't find account by id, error = %v", err)
+		return
+	}
+	if savedAccount.Balance == defaultTestAccount.balance {
+		t.Errorf("Reject(): balance didn't changed, account = %v", savedAccount)
+		return
+	}
+}
+*/
+
+func TestService_Repeat_success(t *testing.T) {
+	// создаём сервис
+	s := newTestService()
+	_, payments, err := s.addAccount(defaultTestAccount)
+	if err != nil {
+		t.Error(err)
+		return
+	}
+	payment := payments[0]	
+	got, err := s.Repeat(payment.ID)
+	if err != nil {
+		t.Error(err)
+		return
+	}
+
+
+	if payment.ID ==  got.ID {
+		t.Error("must not be equal paymentID to newPaymentID")
+		return
+	}
+}
+
+
