@@ -203,16 +203,16 @@ func (s *testService) addAccount(data testAccount)(*types.Account, []*types.Paym
 }
 
 func (s *Service) Repeat(paymentID string) (*types.Payment, error) {
-	payment, err := s.FindPaymentByID(paymentID)
+	pay, err := s.FindPaymentByID(paymentID)
 	if err != nil {
 		return nil, err
 	}
 
-	pay, err := s.Pay(payment.AccountID, payment.Amount, payment.Category)
+	payment, err := s.Pay(pay.AccountID, pay.Amount, pay.Category)
 	if err != nil {
 		return nil, err
 	}
 
-	return pay, nil
+	return payment, nil
 }
 

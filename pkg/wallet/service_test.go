@@ -248,27 +248,32 @@ func TestService_Reject_fail(t *testing.T) {
 	}
 }
 */
-
 func TestService_Repeat_success(t *testing.T) {
-	// создаём сервис
-	s := newTestService()
-	_, payments, err := s.addAccount(defaultTestAccount)
-	if err != nil {
-		t.Error(err)
-		return
-	}
-	payment := payments[0]	
-	got, err := s.Repeat(payment.ID)
-	if err != nil {
-		t.Error(err)
-		return
+	svc := Service{}
+ 	svc.RegisterAccount("+9920000001")
+
+ 	account, err := svc.FindAccountByID(1)
+ 	if err != nil {
+  		t.Errorf("\ngot > %v \nwant > nil", err)
+ 	}
+
+ 	err = svc.Deposit(account.ID, 1000_00)
+ 	if err != nil {
+	 	t.Errorf("\ngot > %v \nwant > nil", err)
 	}
 
+ 	payment, err := svc.Pay(account.ID, 100_00, "auto")
+ 	if err != nil {
+  		t.Errorf("\ngot > %v \nwant > nil", err)
+ 	}
 
-	if payment.ID ==  got.ID {
-		t.Error("must not be equal paymentID to newPaymentID")
-		return
-	}
+ 	pay, err := svc.FindPaymentByID(payment.ID)
+ 	if err != nil {
+ 		t.Errorf("\ngot > %v \nwant > nil", err)
+ 	}
+
+ 	pay, err = svc.Repeat(pay.ID)
+ 	if err != nil {
+  		t.Errorf("Repeat(): Error(): can't pay for an account(%v): %v", pay.ID, err)
+ 	}
 }
-
-
