@@ -5,7 +5,82 @@ import (
 	"github.com/nwarior/wallet/pkg/types"
 	"reflect"
 	"github.com/google/uuid"
+	"fmt"
 )
+
+type testService struct {
+	*Service
+}
+
+func newTestService() *testService {
+	return &testService{Service: &Service{}}
+}
+
+
+func (s *testService) addAccountWithBalance(phone types.Phone, balance types.Money) (*types.Account, error) {
+	// ресгистрируем там пользователя
+	account, err := s.RegisterAccount(phone)
+	if err != nil {
+		return nil, fmt.Errorf("can't register account, error = %v", err)
+	}
+	
+	// пополняем его счёт
+	err = s.Deposit(account.ID, balance)
+	if err != nil {
+		return nil, fmt.Errorf("can't deposit account, error = %v", err)
+	}
+
+	return account, nil
+}
+
+
+type testAccount struct {
+	phone types.Phone
+	balance types.Money
+	payments []struct {
+		amount types.Money
+		category types.PaymentCategory
+	}
+}
+
+var defaultTestAccount = testAccount {
+	phone: "+992000000001",
+	balance: 10_000_00,
+	payments: []struct {
+		amount	types.Money
+		category types.PaymentCategory
+	}{
+		{amount: 1_000_00, category: "auto"},
+	},
+}
+
+func (s *testService) addAccount(data testAccount)(*types.Account, []*types.Payment, error) {
+	// регистрируем там пользователя
+	account, err := s.RegisterAccount(data.phone)
+	if err != nil {
+		return nil, nil, fmt.Errorf("can't register account, error = %v", err)
+	}
+
+	// пополняем его счёт
+	err = s.Deposit(account.ID, data.balance)
+	if err != nil {
+		return nil, nil, fmt.Errorf("can't deposit accoun, error = %v", err)
+	}
+
+	// выполняем платеже
+	// можем создать слайс сразу нужной длины, поскольку знаем размер
+	payments := make([]*types.Payment, len(data.payments))
+	for i, payment := range data.payments {
+		// тогда здесь работаем просто через index, а не через append
+		payments[i], err = s.Pay(account.ID, payment.amount, payment.category)
+		if err != nil {
+			return nil, nil, fmt.Errorf("can't make payment, error = %v", err)
+		}
+	}
+
+	return account, payments, nil
+}
+
 
 /*
 func TestService_RegisterAccount_success(t *testing.T) {
