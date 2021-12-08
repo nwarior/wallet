@@ -353,7 +353,7 @@ func TestService_Repeat_success(t *testing.T) {
  	}
 }
 
-func TestService_FavoriteFromPayment_success(t *testing.T) {
+func TestService_FavoritePayment_success(t *testing.T) {
 	s := newTestService()
 	_, payments, err := s.addAccount(defaultTestAccount)
 	if err != nil {
@@ -362,7 +362,7 @@ func TestService_FavoriteFromPayment_success(t *testing.T) {
 	}
 
 	payment := payments[0]
-	result, err := s.FavoriteFromPayment(payment.ID, "kiki")
+	result, err := s.FavoritePayment(payment.ID, "kiki")
 	if err != nil {
 		t.Error(err)
 		return
@@ -381,7 +381,7 @@ func TestService_FavoriteFromPayment_success(t *testing.T) {
 	}
 }
 
-func TestService_FavoriteFromPayment_fail(t *testing.T) {
+func TestService_FavoritePayment_fail(t *testing.T) {
 	s := newTestService()
 	_, payments, err := s.addAccount(defaultTestAccount)
 	if err != nil {
@@ -390,7 +390,7 @@ func TestService_FavoriteFromPayment_fail(t *testing.T) {
 	}
 
 	payment := payments[0]
-	result, err := s.FavoriteFromPayment(payment.ID, "kiki")
+	result, err := s.FavoritePayment(payment.ID, "kiki")
 	if err != nil {
 		t.Error(err)
 		return
@@ -418,7 +418,7 @@ func TestService_PayFromFavorite_success(t *testing.T) {
 	}
 
 	payment := payments[0]
-	result, err := s.FavoriteFromPayment(payment.ID, "kiki")
+	result, err := s.FavoritePayment(payment.ID, "kiki")
 	if err != nil {
 		t.Error(err)
 		return
@@ -452,7 +452,7 @@ func TestService_PayFromFavorite_fail(t *testing.T) {
 	}
 
 	payment := payments[0]
-	result, err := s.FavoriteFromPayment(payment.ID, "kiki")
+	result, err := s.FavoritePayment(payment.ID, "kiki")
 	if err != nil {
 		t.Error(err)
 		return
