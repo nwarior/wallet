@@ -156,7 +156,7 @@ func (s *Service) FavoriteFromPayment(favoriteID string) (*types.Favorite, error
 }
 
 func (s *Service) FavoritePayment(paymentID string, name string) (*types.Favorite, error) {
-	payment, err := s.FavoriteFromPayment(paymentID)
+	payment, err := s.FindPaymentByID(paymentID)
 	if err != nil {
 		return nil, err
 	}
