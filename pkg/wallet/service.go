@@ -155,7 +155,7 @@ func (s *Service) FindFavoriteByID(favoriteID string) (*types.Favorite, error) {
 	return nil, ErrFavoriteNotFound
 }
 
-func (s *Service) FavoriteFromPayment(paymentID string, name string) (*types.Favorite, error) {
+func (s *Service) FavoritePayment(paymentID string, name string) (*types.Favorite, error) {
 	payment, err := s.FindPaymentByID(paymentID)
 	if err != nil {
 		return nil, err
