@@ -1,11 +1,11 @@
 package wallet
 
 import (
-	"testing"
-	"github.com/nwarior/wallet/pkg/types"
-	"reflect"
-	"github.com/google/uuid"
 	"fmt"
+	"reflect"
+	"testing"
+	"github.com/google/uuid"
+	"github.com/nwarior/wallet/pkg/types"
 )
 
 type testService struct {
@@ -351,4 +351,128 @@ func TestService_Repeat_success(t *testing.T) {
  	if err != nil {
   		t.Errorf("Repeat(): Error(): can't pay for an account(%v): %v", pay.ID, err)
  	}
+}
+
+func TestService_FavoritePayment_success(t *testing.T) {
+	s := newTestService()
+	_, payments, err := s.addAccount(defaultTestAccount)
+	if err != nil {
+		t.Error(err)
+		return
+	}
+
+	payment := payments[0]
+	result, err := s.FavoritePayment(payment.ID, "kiki")
+	if err != nil {
+		t.Error(err)
+		return
+	}
+
+	expected := &types.Favorite{
+		ID: payment.ID,
+		AccountID: payment.AccountID,
+		Name: "kiki",
+		Amount: payment.Amount,
+		Category: payment.Category,
+	}
+
+	if !reflect.DeepEqual(expected, result) {
+		t.Errorf("invalid error, expected: %v, actual: %v", expected, result)
+	}
+}
+
+func TestService_FavoritePayment_fail(t *testing.T) {
+	s := newTestService()
+	_, payments, err := s.addAccount(defaultTestAccount)
+	if err != nil {
+		t.Error(err)
+		return
+	}
+
+	payment := payments[0]
+	result, err := s.FavoritePayment(payment.ID, "kiki")
+	if err != nil {
+		t.Error(err)
+		return
+	}
+
+	expected := &types.Favorite{
+		ID: payment.ID,
+		AccountID: payment.AccountID,
+		Name: "santo",
+		Amount: payment.Amount,
+		Category: payment.Category,
+	}
+
+	if reflect.DeepEqual(expected, result) {
+		t.Errorf("invalid error, expected: %v, actual: %v", expected, result)
+	}
+}
+
+func TestService_PayFromFavorite_success(t *testing.T) {
+	s := newTestService()
+	_, payments, err := s.addAccount(defaultTestAccount)
+	if err != nil {
+		t.Error(err)
+		return
+	}
+
+	payment := payments[0]
+	result, err := s.FavoritePayment(payment.ID, "kiki")
+	if err != nil {
+		t.Error(err)
+		return
+	}
+
+	fromFavor, err := s.PayFromFavorite(result.ID)
+	if err != nil  {
+		t.Error(err)
+		return
+	}
+
+	expected := &types.Payment{
+		ID:	fromFavor.ID,
+		AccountID: fromFavor.AccountID,
+		Amount: fromFavor.Amount, 
+		Category: fromFavor.Category,
+		Status: fromFavor.Status,
+	}
+
+	if !reflect.DeepEqual(expected, fromFavor) {
+		t.Errorf("invalid error, expected: %v, actual: %v", expected, fromFavor)
+	}
+}
+
+func TestService_PayFromFavorite_fail(t *testing.T) {
+	s := newTestService()
+	_, payments, err := s.addAccount(defaultTestAccount)
+	if err != nil {
+		t.Error(err)
+		return
+	}
+
+	payment := payments[0]
+	result, err := s.FavoritePayment(payment.ID, "kiki")
+	if err != nil {
+		t.Error(err)
+		return
+	}
+
+	fromFavor, err := s.PayFromFavorite(result.ID)
+	if err != nil  {
+		t.Error(err)
+		return
+	}
+
+	expected := &types.Payment{
+		ID:	fromFavor.ID,
+		AccountID: fromFavor.AccountID,
+		Amount: fromFavor.Amount, 
+		Category: "santo",
+		Status: fromFavor.Status,
+	}
+
+	if reflect.DeepEqual(expected, fromFavor) {
+		t.Errorf("invalid error, expected: %v, actual: %v", expected, fromFavor)
+	}
 }
