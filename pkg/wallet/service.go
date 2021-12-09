@@ -145,16 +145,6 @@ func (s *Service) Repeat(paymentID string) (*types.Payment, error) {
 	return payment, nil
 }
 
-func (s *Service) FindFavoriteByID(favoriteID string) (*types.Favorite, error) {
-	for _, fav := range s.favorites{
-		if fav.ID == favoriteID {
-			return fav, nil
-		}
-	}
-
-	return nil, ErrFavoriteNotFound
-}
-
 func (s *Service) FavoritePayment(paymentID string, name string) (*types.Favorite, error) {
 	payment, err := s.FindPaymentByID(paymentID)
 	if err != nil {
@@ -173,9 +163,12 @@ func (s *Service) FavoritePayment(paymentID string, name string) (*types.Favorit
 }
 
 func (s *Service) PayFromFavorite(favoriteID string) (*types.Payment, error) {
-	favorite, err := s.FindFavoriteByID(favoriteID)
-	if err != nil {
-		return nil, err
+	var favorite *types.Favorite
+	for _, fav := range s.favorites {
+		if fav.ID == favoriteID {
+			favorite = fav
+			break
+		}
 	}
 
 	return s.Pay(favorite.AccountID, favorite.Amount, favorite.Category)
