@@ -16,24 +16,6 @@ func newTestService() *testService {
 	return &testService{Service: &Service{}}
 }
 
-
-func (s *testService) addAccountWithBalance(phone types.Phone, balance types.Money) (*types.Account, error) {
-	// ресгистрируем там пользователя
-	account, err := s.RegisterAccount(phone)
-	if err != nil {
-		return nil, fmt.Errorf("can't register account, error = %v", err)
-	}
-	
-	// пополняем его счёт
-	err = s.Deposit(account.ID, balance)
-	if err != nil {
-		return nil, fmt.Errorf("can't deposit account, error = %v", err)
-	}
-
-	return account, nil
-}
-
-
 type testAccount struct {
 	phone types.Phone
 	balance types.Money
@@ -353,7 +335,7 @@ func TestService_Repeat_success(t *testing.T) {
  	}
 }
 
-func TestService_FavoriteFromPayment_success(t *testing.T) {
+func TestService_FavoritePayment_success(t *testing.T) {
 	s := newTestService()
 	_, payments, err := s.addAccount(defaultTestAccount)
 	if err != nil {
@@ -381,7 +363,7 @@ func TestService_FavoriteFromPayment_success(t *testing.T) {
 	}
 }
 
-func TestService_FavoriteFromPayment_fail(t *testing.T) {
+func TestService_FavoritePayment_fail(t *testing.T) {
 	s := newTestService()
 	_, payments, err := s.addAccount(defaultTestAccount)
 	if err != nil {
