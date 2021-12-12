@@ -4,6 +4,9 @@ import (
 	"github.com/nwarior/wallet/pkg/types"
 	"errors"
 	"github.com/google/uuid"
+	"log"
+	"os"
+	"strconv"
 )
 
 var ErrPhoneRegistered = errors.New("phone already registered")
@@ -180,4 +183,52 @@ func (s *Service) PayFromFavorite(favoriteID string) (*types.Payment, error) {
 	}
 
 	return payment, nil
+}
+
+func (s *Service) ExportToFile(path string) error {
+	file, err := os.Create(path)
+	if err != nil {
+		log.Print(err)
+	}
+	defer func() {
+		if cerr := file.Close(); cerr != nil {
+			log.Print(cerr)
+		}
+	}()
+	
+	for _, acc := range s.accounts {
+		_, err = file.Write([]byte(strconv.FormatInt(int64(acc.ID), 10)))
+		if err != nil {
+			return err
+		}
+
+		_, err = file.Write([]byte(";"))
+		if err != nil {
+			return err
+		}
+
+		_, err = file.Write([]byte(acc.Phone))
+		if err != nil {
+			if err != nil {
+				return err
+			}
+		}
+		_, err = file.Write([]byte(";"))
+		if err != nil {
+			return err
+		}
+
+		_, err = file.Write([]byte(strconv.FormatInt(int64(acc.Balance), 10)))
+		if err != nil {
+			return err
+		}
+
+		_, err = file.Write([]byte("|"))
+		if err != nil {
+			return err
+		}
+
+	}
+	
+	return nil
 }
