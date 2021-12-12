@@ -12,4 +12,5 @@ func main() {
 	s.RegisterAccount("+992000000004")
 	
 	s.ExportToFile("data/acccounts.txt")
+	s.ImportFromFile("data/acccounts.txt")
 }

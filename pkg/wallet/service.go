@@ -7,6 +7,8 @@ import (
 	"log"
 	"os"
 	"strconv"
+	"io"
+	"strings"
 )
 
 var ErrPhoneRegistered = errors.New("phone already registered")
@@ -230,5 +232,40 @@ func (s *Service) ExportToFile(path string) error {
 
 	}
 	
+	return nil
+}
+
+func (s *Service) ImportFromFile(path string) error{
+	file, err := os.Open(path)
+	if err != nil {
+		log.Print(err)
+		return err
+	}
+	defer func() {
+		err := file.Close()
+		if err != nil {
+			log.Print(err)
+		}
+	}()
+	
+	content := make([]byte, 0)
+	buf := make([]byte, 4)
+	for {
+		read, err := file.Read(buf)
+		if err == io.EOF {
+			content = append(content, buf[:read]...)
+			break
+		}
+		
+		if err != nil {
+			log.Print(err)
+			return err
+		}
+		
+		content = append(content, buf[:read]...)
+	}
+	
+	data := string(content)
+	log.Printf("%q\n", strings.Split(data, "|"))
 	return nil
 }
