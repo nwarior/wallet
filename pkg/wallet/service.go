@@ -196,7 +196,7 @@ func (s *Service) ExportToFile(path string) error {
 			log.Print(cerr)
 		}
 	}()
-	n := 0
+	
 	for _, acc := range s.accounts {
 		_, err = file.Write([]byte(strconv.FormatInt(int64(acc.ID), 10)))
 		if err != nil {
@@ -224,13 +224,11 @@ func (s *Service) ExportToFile(path string) error {
 			return err
 		}
 
-		n++
-		if n < len(s.accounts) {
-			_, err = file.Write([]byte("|"))
-			if err != nil {
-				return err
-			}
+		_, err = file.Write([]byte("|"))
+		if err != nil {
+			return err
 		}
+		
 	}
 
 	return nil
