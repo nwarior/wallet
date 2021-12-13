@@ -1,14 +1,16 @@
 package wallet
 
 import (
-	"github.com/nwarior/wallet/pkg/types"
 	"errors"
-	"github.com/google/uuid"
+	"fmt"
+	"io"
 	"log"
 	"os"
 	"strconv"
-	"io"
 	"strings"
+
+	"github.com/google/uuid"
+	"github.com/nwarior/wallet/pkg/types"
 )
 
 var ErrPhoneRegistered = errors.New("phone already registered")
@@ -268,6 +270,30 @@ func (s *Service) ImportFromFile(path string) error{
 	}
 	
 	data := string(content)
-	log.Printf("%q\n", strings.Split(data, "|"))
+	data2 := strings.Split(data, "|")
+	for _, i := range data2 {
+		data3 := strings.Split(i, ";")
+		var data4 []string
+		data4 = make([]string, 3)
+		data4 = append(data4, data3...)
+		id, err := strconv.ParseInt(data4[0], 10, 64)
+		if err != nil {
+			return err
+		}
+
+		balance, err := strconv.ParseInt(data4[2], 10, 64)
+		if err != nil {
+			return err
+		}
+
+		account := &types.Account {
+			ID: int64(id),
+			Phone: types.Phone(data4[1]),
+			Balance: types.Money(balance),
+		}
+
+		s.accounts = append(s.accounts, account)
+	}
+	
 	return nil
 }
