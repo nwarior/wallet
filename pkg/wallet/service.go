@@ -2,13 +2,11 @@ package wallet
 
 import (
 	"errors"
-	"fmt"
 	"io"
 	"log"
 	"os"
 	"strconv"
 	"strings"
-
 	"github.com/google/uuid"
 	"github.com/nwarior/wallet/pkg/types"
 )
