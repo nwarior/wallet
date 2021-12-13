@@ -20,9 +20,9 @@ var ErrFavoriteNotFound = errors.New("favorite not found")
 
 type Service struct {
 	nextAccountID int64
-	accounts []*types.Account
-	payments []*types.Payment
-	favorites []*types.Favorite
+	accounts      []*types.Account
+	payments      []*types.Payment
+	favorites     []*types.Favorite
 }
 
 func (s *Service) RegisterAccount(phone types.Phone) (*types.Account, error) {
@@ -33,13 +33,13 @@ func (s *Service) RegisterAccount(phone types.Phone) (*types.Account, error) {
 	}
 
 	s.nextAccountID++
-	account := &types.Account {
-		ID:	s.nextAccountID,
-		Phone:	phone,
-		Balance:0,
+	account := &types.Account{
+		ID:      s.nextAccountID,
+		Phone:   phone,
+		Balance: 0,
 	}
 	s.accounts = append(s.accounts, account)
-	
+
 	return account, nil
 }
 
@@ -88,19 +88,19 @@ func (s *Service) Pay(accountID int64, amount types.Money, category types.Paymen
 
 	account.Balance -= amount
 	paymentID := uuid.New().String()
-	payment := &types.Payment {
-		ID:	paymentID,
+	payment := &types.Payment{
+		ID:        paymentID,
 		AccountID: accountID,
-		Amount: amount, 
-		Category: category,
-		Status: types.PaymentStatusInProgress,
+		Amount:    amount,
+		Category:  category,
+		Status:    types.PaymentStatusInProgress,
 	}
 	s.payments = append(s.payments, payment)
 	return payment, nil
 }
 
-func (s *Service)FindAccountByID(accountID int64)(*types.Account, error) {
-	for _, acc := range s.accounts{
+func (s *Service) FindAccountByID(accountID int64) (*types.Account, error) {
+	for _, acc := range s.accounts {
 		if acc.ID == accountID {
 			return acc, nil
 		}
@@ -109,7 +109,7 @@ func (s *Service)FindAccountByID(accountID int64)(*types.Account, error) {
 	return nil, ErrAccountNotFound
 }
 
-func (s *Service)FindPaymentByID(paymentID string)(*types.Payment, error){
+func (s *Service) FindPaymentByID(paymentID string) (*types.Payment, error) {
 	for _, payment := range s.payments {
 		if payment.ID == paymentID {
 			return payment, nil
@@ -135,7 +135,6 @@ func (s *Service) Reject(paymentID string) error {
 	return nil
 }
 
-
 func (s *Service) Repeat(paymentID string) (*types.Payment, error) {
 	pay, err := s.FindPaymentByID(paymentID)
 	if err != nil {
@@ -157,11 +156,11 @@ func (s *Service) FavoritePayment(paymentID string, name string) (*types.Favorit
 	}
 
 	favorite := &types.Favorite{
-		ID: uuid.New().String(),
+		ID:        uuid.New().String(),
 		AccountID: payment.AccountID,
-		Name: name,
-		Amount: payment.Amount,
-		Category: payment.Category,
+		Name:      name,
+		Amount:    payment.Amount,
+		Category:  payment.Category,
 	}
 	s.favorites = append(s.favorites, favorite)
 	return favorite, nil
@@ -178,7 +177,7 @@ func (s *Service) PayFromFavorite(favoriteID string) (*types.Payment, error) {
 	if favorite == nil {
 		return nil, ErrFavoriteNotFound
 	}
-	
+
 	payment, err := s.Pay(favorite.AccountID, favorite.Amount, favorite.Category)
 	if err != nil {
 		return nil, err
@@ -219,7 +218,7 @@ func (s *Service) ExportToFile(path string) error {
 		if err != nil {
 			return err
 		}
-		
+
 		_, err = file.Write([]byte(strconv.FormatInt(int64(acc.Balance), 10)))
 		if err != nil {
 			return err
@@ -233,11 +232,11 @@ func (s *Service) ExportToFile(path string) error {
 			}
 		}
 	}
-	
+
 	return nil
 }
 
-func (s *Service) ImportFromFile(path string) error{
+func (s *Service) ImportFromFile(path string) error {
 	file, err := os.Open(path)
 	if err != nil {
 		log.Print(err)
@@ -249,7 +248,7 @@ func (s *Service) ImportFromFile(path string) error{
 			log.Print(err)
 		}
 	}()
-	
+
 	content := make([]byte, 0)
 	buf := make([]byte, 4)
 	for {
@@ -258,40 +257,44 @@ func (s *Service) ImportFromFile(path string) error{
 			content = append(content, buf[:read]...)
 			break
 		}
-		
+
 		if err != nil {
 			log.Print(err)
 			return err
 		}
-		
+
 		content = append(content, buf[:read]...)
 	}
-	
+
 	data := string(content)
-	data2 := strings.Split(data, "|")
-	for _, i := range data2 {
-		data3 := strings.Split(i, ";")
-		var data4 []string
-		data4 = make([]string, 3)
-		data4 = append(data4, data3...)
-		id, err := strconv.ParseInt(data4[0], 10, 64)
+	accounts := strings.Split(data, "|")
+	if len(accounts) > 0 {
+		accounts = accounts[:len(accounts)-1]
+	}
+
+	for _, acc := range accounts {
+		fields := strings.Split(acc, ";")  // добавляем к каждому полю ";" fields - это поля
+		id, err := strconv.Atoi(fields[0]) // id это первое поле поэтому fields[0]
 		if err != nil {
+			log.Print(err)
 			return err
 		}
+		phone := fields[1] // здесь и так string поэтому проверка на ошибок не будет
 
-		balance, err := strconv.ParseInt(data4[2], 10, 64)
+		balance, err := strconv.Atoi(fields[2])
 		if err != nil {
+			log.Print(err)
 			return err
 		}
-
-		account := &types.Account {
-			ID: int64(id),
-			Phone: types.Phone(data4[1]),
+		// добавление всех полей в целую структуру.
+		account := &types.Account{
+			ID:      int64(id),
+			Phone:   types.Phone(phone),
 			Balance: types.Money(balance),
 		}
 
 		s.accounts = append(s.accounts, account)
 	}
-	
+
 	return nil
 }
