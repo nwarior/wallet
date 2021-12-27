@@ -7,6 +7,7 @@ import (
 	"os"
 	"strconv"
 	"strings"
+
 	"github.com/google/uuid"
 	"github.com/nwarior/wallet/pkg/types"
 )
@@ -196,7 +197,7 @@ func (s *Service) ExportToFile(path string) error {
 			log.Print(cerr)
 		}
 	}()
-	
+
 	for _, acc := range s.accounts {
 		_, err = file.Write([]byte(strconv.FormatInt(int64(acc.ID), 10)))
 		if err != nil {
@@ -228,7 +229,7 @@ func (s *Service) ExportToFile(path string) error {
 		if err != nil {
 			return err
 		}
-		
+
 	}
 
 	return nil
@@ -292,6 +293,180 @@ func (s *Service) ImportFromFile(path string) error {
 		}
 
 		s.accounts = append(s.accounts, account)
+	}
+
+	return nil
+}
+
+func (s *Service) Export(dir string) error {
+	// file or accounts
+	file, err := os.Create(dir + "accounts.dump")
+	if err != nil {
+		log.Print(err)
+	}
+	defer func() {
+		if cerr := file.Close(); cerr != nil {
+			log.Print(cerr)
+		}
+	}()
+
+	for _, acc := range s.accounts {
+		_, err = file.Write([]byte(strconv.FormatInt(int64(acc.ID), 10)))
+		if err != nil {
+			return err
+		}
+
+		_, err = file.Write([]byte(";"))
+		if err != nil {
+			return err
+		}
+
+		_, err = file.Write([]byte(acc.Phone))
+		if err != nil {
+			if err != nil {
+				return err
+			}
+		}
+		_, err = file.Write([]byte(";"))
+		if err != nil {
+			return err
+		}
+
+		_, err = file.Write([]byte(strconv.FormatInt(int64(acc.Balance), 10)))
+		if err != nil {
+			return err
+		}
+
+		_, err = file.Write([]byte("\n"))
+		if err != nil {
+			return err
+		}
+
+	}
+
+	filePayment, err := os.Create(dir + "payments.dump")
+	if err != nil {
+		log.Print(err)
+	}
+	defer func() {
+		if cerr := filePayment.Close(); cerr != nil {
+			log.Print(cerr)
+		}
+	}()
+
+	for _, pay := range s.payments {
+		_, err = filePayment.Write([]byte(pay.ID))
+		if err != nil {
+			return err
+		}
+
+		_, err = filePayment.Write([]byte(";"))
+		if err != nil {
+			return err
+		}
+
+		_, err = filePayment.Write([]byte(strconv.FormatInt(int64(pay.AccountID), 10)))
+		if err != nil {
+			return err
+		}
+
+		_, err = filePayment.Write([]byte(";"))
+		if err != nil {
+			return err
+		}
+
+		_, err = filePayment.Write([]byte(strconv.FormatInt(int64(pay.Amount), 10)))
+		if err != nil {
+			return err
+		}
+
+		_, err = filePayment.Write([]byte(";"))
+		if err != nil {
+			return err
+		}
+
+		_, err = filePayment.Write([]byte(string(pay.Category)))
+		if err != nil {
+			return err
+		}
+
+		_, err = filePayment.Write([]byte(";"))
+		if err != nil {
+			return err
+		}
+
+		_, err = filePayment.Write([]byte(string(pay.Status)))
+		if err != nil {
+			return err
+		}
+
+		_, err = filePayment.Write([]byte("\n"))
+		if err != nil {
+			return err
+		}
+
+	}
+
+	fileFavorite, err := os.Create(dir + "favorites.dump")
+	if err != nil {
+		log.Print(err)
+	}
+	defer func() {
+		if cerr := fileFavorite.Close(); cerr != nil {
+			log.Print(cerr)
+		}
+	}()
+
+	for _, fav := range s.favorites {
+		_, err = fileFavorite.Write([]byte(fav.ID))
+		if err != nil {
+			return err
+		}
+
+		_, err = fileFavorite.Write([]byte(";"))
+		if err != nil {
+			return err
+		}
+
+		_, err = fileFavorite.Write([]byte(strconv.FormatInt(int64(fav.AccountID), 10)))
+		if err != nil {
+			return err
+		}
+
+		_, err = fileFavorite.Write([]byte(";"))
+		if err != nil {
+			return err
+		}
+
+		_, err = fileFavorite.Write([]byte(fav.Name))
+		if err != nil {
+			return err
+		}
+
+		_, err = fileFavorite.Write([]byte(";"))
+		if err != nil {
+			return err
+		}
+
+		_, err = fileFavorite.Write([]byte(strconv.FormatInt(int64(fav.Amount), 10)))
+		if err != nil {
+			return err
+		}
+
+		_, err = fileFavorite.Write([]byte(";"))
+		if err != nil {
+			return err
+		}
+
+		_, err = fileFavorite.Write([]byte(fav.Category))
+		if err != nil {
+			return err
+		}
+
+		_, err = fileFavorite.Write([]byte("\n"))
+		if err != nil {
+			return err
+		}
 	}
 
 	return nil
